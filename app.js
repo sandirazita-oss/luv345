@@ -3,14 +3,38 @@
 // 1. DATA MENU MARTABAK
 // ===================================
 
-let products = JSON.parse(localStorage.getItem("martabakProducts")) || [
+const defaultProducts = [
     {id: 1, name: "Martabak Cokelat", price: 20000, stock: 10, image: "martabak coklat.jpg"},
     {id: 2, name: "Martabak Keju", price: 23000, stock: 10, image: "martabak keju.jpg"},
     {id: 3, name: "Martabak Cokelat Keju", price: 27000, stock: 10, image: "martabak coklat keju.jpg"},
     {id: 4, name: "Martabak Kacang Cokelat", price: 25000, stock: 8, image: "coklat kacang.jpg"},
-    {id: 5, name: "Martabak Telur Biasa", price: 22000, stock: 10,  image: "telur biasa.jpg"},
+    {id: 5, name: "Martabak Telur Biasa", price: 22000, stock: 10, image: "telur biasa.jpg"},
     {id: 6, name: "Martabak Telur Spesial", price: 30000, stock: 8, image: "telur spesial.jpg"}
 ];
+
+// Mengambil data produk dari LocalStorage
+let savedProducts = JSON.parse(
+    localStorage.getItem("martabakProducts")
+);
+
+let products = savedProducts || defaultProducts;
+
+// Memastikan setiap produk mempunyai gambar
+products = products.map(product => {
+
+    const defaultProduct = defaultProducts.find(
+        p => p.id === product.id
+    );
+
+    return {
+        ...defaultProduct,
+        ...product,
+        image: defaultProduct
+            ? defaultProduct.image
+            : product.image
+    };
+
+});
 
 let cart = [];
 
@@ -24,6 +48,7 @@ let transactions = JSON.parse(
 // ===================================
 
 function saveData() {
+
     localStorage.setItem(
         "martabakProducts",
         JSON.stringify(products)
@@ -33,6 +58,7 @@ function saveData() {
         "martabakTransactions",
         JSON.stringify(transactions)
     );
+
 }
 
 
@@ -41,7 +67,9 @@ function saveData() {
 // ===================================
 
 function rupiah(number) {
+
     return "Rp" + Number(number).toLocaleString("id-ID");
+
 }
 
 
@@ -53,6 +81,8 @@ function renderProducts() {
 
     const list = document.getElementById("productList");
 
+    if (!list) return;
+
     list.innerHTML = "";
 
     products.forEach(product => {
@@ -60,20 +90,47 @@ function renderProducts() {
         let stockStatus = "";
 
         if (product.stock === 0) {
-            stockStatus = `<span class="badge bg-danger">Habis</span>`;
+
+            stockStatus = `
+                <span class="badge bg-danger">
+                    Habis
+                </span>
+            `;
+
         } else if (product.stock < 5) {
-            stockStatus = `<span class="badge bg-warning text-dark">Stok Menipis</span>`;
+
+            stockStatus = `
+                <span class="badge bg-warning text-dark">
+                    Stok Menipis
+                </span>
+            `;
+
         } else {
-            stockStatus = `<span class="badge bg-success">Tersedia</span>`;
+
+            stockStatus = `
+                <span class="badge bg-success">
+                    Tersedia
+                </span>
+            `;
+
         }
 
         list.innerHTML += `
+
             <div class="col-md-6 col-lg-4">
 
                 <div class="card product-card">
 
                     <div class="food-image">
-                        ${product.emoji}
+
+                        <img
+                            src="${product.image}"
+                            alt="${product.name}"
+                            class="img-fluid w-100"
+                            style="height: 200px; object-fit: cover;"
+                            onerror="this.onerror=null; this.alt='Gambar tidak ditemukan'; this.style.display='none';"
+                        >
+
                     </div>
 
                     <div class="card-body">
@@ -96,13 +153,19 @@ function renderProducts() {
                             class="btn btn-brown w-100"
                             onclick="addToCart(${product.id})"
                             ${product.stock === 0 ? "disabled" : ""}>
-                            ${product.stock === 0 ? "Stok Habis" : "Tambah Pesanan"}
+
+                            ${product.stock === 0
+                                ? "Stok Habis"
+                                : "Tambah Pesanan"}
+
                         </button>
 
                     </div>
+
                 </div>
 
             </div>
+
         `;
 
     });
@@ -119,8 +182,11 @@ function addToCart(id) {
     const product = products.find(p => p.id === id);
 
     if (!product || product.stock <= 0) {
+
         alert("Maaf, stok martabak habis!");
+
         return;
+
     }
 
     const item = cart.find(c => c.id === id);
@@ -128,8 +194,11 @@ function addToCart(id) {
     if (item) {
 
         if (item.qty >= product.stock) {
+
             alert("Jumlah pesanan melebihi stok!");
+
             return;
+
         }
 
         item.qty++;
@@ -137,10 +206,12 @@ function addToCart(id) {
     } else {
 
         cart.push({
+
             id: product.id,
             name: product.name,
             price: product.price,
             qty: 1
+
         });
 
     }
@@ -158,14 +229,18 @@ function renderCart() {
 
     const list = document.getElementById("cartList");
 
+    if (!list) return;
+
     list.innerHTML = "";
 
     if (cart.length === 0) {
 
         list.innerHTML = `
+
             <p class="text-secondary">
                 Belum ada pesanan.
             </p>
+
         `;
 
     }
@@ -178,30 +253,39 @@ function renderCart() {
                 align-items-center border-bottom py-3">
 
                 <div>
+
                     <b>${item.name}</b>
 
                     <div class="text-secondary small">
+
                         ${rupiah(item.price)} x ${item.qty}
+
                     </div>
+
                 </div>
 
                 <div class="text-end">
 
-                    <b>${rupiah(item.price * item.qty)}</b>
+                    <b>
+                        ${rupiah(item.price * item.qty)}
+                    </b>
 
                     <div class="mt-2">
 
-                        <button class="btn btn-sm btn-outline-secondary"
+                        <button
+                            class="btn btn-sm btn-outline-secondary"
                             onclick="changeQty(${item.id}, -1)">
                             -
                         </button>
 
-                        <button class="btn btn-sm btn-outline-secondary"
+                        <button
+                            class="btn btn-sm btn-outline-secondary"
                             onclick="changeQty(${item.id}, 1)">
                             +
                         </button>
 
-                        <button class="btn btn-sm btn-outline-danger"
+                        <button
+                            class="btn btn-sm btn-outline-danger"
                             onclick="removeItem(${item.id})">
                             Hapus
                         </button>
@@ -236,13 +320,19 @@ function changeQty(id, amount) {
     const newQty = item.qty + amount;
 
     if (newQty <= 0) {
+
         removeItem(id);
+
         return;
+
     }
 
     if (newQty > product.stock) {
+
         alert("Stok tidak mencukupi!");
+
         return;
+
     }
 
     item.qty = newQty;
@@ -272,8 +362,11 @@ function removeItem(id) {
 function getTotal() {
 
     return cart.reduce(
+
         (sum, item) => sum + item.price * item.qty,
+
         0
+
     );
 
 }
@@ -306,9 +399,13 @@ function updatePayment() {
         document.getElementById("uang").value
     );
 
-    const metode = document.querySelector(
+    const selectedPayment = document.querySelector(
         'input[name="payment"]:checked'
-    ).value;
+    );
+
+    if (!selectedPayment) return;
+
+    const metode = selectedPayment.value;
 
     const cashBox = document.getElementById("cashBox");
 
@@ -333,7 +430,9 @@ function updatePayment() {
             rupiah(change > 0 ? change : 0);
 
         if (uang < total) {
+
             valid = false;
+
         }
 
     } else {
@@ -343,10 +442,14 @@ function updatePayment() {
         paymentInfo.style.display = "block";
 
         paymentInfo.innerHTML = `
+
             <b>Pembayaran ${metode}</b><br>
+
             Metode ini masih dalam simulasi projek.
+
             Pembayaran belum terhubung ke bank atau
             penyedia QRIS sungguhan.
+
         `;
 
     }
@@ -367,42 +470,70 @@ document.getElementById("orderBtn")
 
     const telepon = document.getElementById("telepon").value.trim();
 
-    const metode = document.querySelector(
+    const selectedPayment = document.querySelector(
         'input[name="payment"]:checked'
-    ).value;
+    );
+
+    if (!selectedPayment) {
+
+        alert("Silakan pilih metode pembayaran!");
+
+        return;
+
+    }
+
+    const metode = selectedPayment.value;
 
     const total = getTotal();
 
-    const uang = Number(document.getElementById("uang").value);
+    const uang = Number(
+        document.getElementById("uang").value
+    );
 
     if (!nama || !telepon) {
+
         alert("Silakan isi nama dan nomor WhatsApp!");
+
         return;
+
     }
 
     if (cart.length === 0) {
+
         alert("Keranjang masih kosong!");
+
         return;
+
     }
 
     // Memeriksa stok kembali
+
     for (const item of cart) {
 
         const product = products.find(p => p.id === item.id);
 
         if (!product || item.qty > product.stock) {
+
             alert("Stok produk tidak mencukupi!");
+
             return;
+
         }
 
     }
 
+    // Memeriksa pembayaran tunai
+
     if (metode === "Tunai" && uang < total) {
+
         alert("Uang pembayaran belum cukup!");
+
         return;
+
     }
 
     // Mengurangi stok
+
     cart.forEach(item => {
 
         const product = products.find(p => p.id === item.id);
@@ -412,6 +543,7 @@ document.getElementById("orderBtn")
     });
 
     // Membuat data transaksi
+
     const trx = {
 
         id: "MRT-" + Date.now(),
@@ -445,6 +577,7 @@ document.getElementById("orderBtn")
     createReceipt(trx);
 
     // Mengosongkan keranjang
+
     cart = [];
 
     document.getElementById("uang").value = "";
@@ -471,13 +604,21 @@ function createReceipt(trx) {
 
     let content = `
 
-        <p><b>ID Pesanan:</b> ${trx.id}</p>
+        <p>
+            <b>ID Pesanan:</b> ${trx.id}
+        </p>
 
-        <p><b>Nama:</b> ${trx.nama}</p>
+        <p>
+            <b>Nama:</b> ${trx.nama}
+        </p>
 
-        <p><b>WhatsApp:</b> ${trx.telepon}</p>
+        <p>
+            <b>WhatsApp:</b> ${trx.telepon}
+        </p>
 
-        <p><b>Tanggal:</b> ${trx.tanggal}</p>
+        <p>
+            <b>Tanggal:</b> ${trx.tanggal}
+        </p>
 
         <hr>
 
@@ -508,16 +649,23 @@ function createReceipt(trx) {
         <hr>
 
         <div class="d-flex justify-content-between">
+
             <b>Total Belanja</b>
+
             <b>${rupiah(trx.total)}</b>
+
         </div>
 
         <p class="mt-2">
+
             Metode Pembayaran: ${trx.metode}
+
         </p>
 
         <p>
+
             Status: ${trx.status}
+
         </p>
 
     `;
@@ -526,9 +674,13 @@ function createReceipt(trx) {
 
         content += `
 
-            <p>Uang Dibayar: ${rupiah(trx.uang)}</p>
+            <p>
+                Uang Dibayar: ${rupiah(trx.uang)}
+            </p>
 
-            <p>Kembalian: ${rupiah(trx.kembalian)}</p>
+            <p>
+                Kembalian: ${rupiah(trx.kembalian)}
+            </p>
 
         `;
 
@@ -544,8 +696,17 @@ function createReceipt(trx) {
 // 14. MENJALANKAN APLIKASI
 // ===================================
 
+// Menyimpan data produk awal jika belum tersedia
+
+if (!localStorage.getItem("martabakProducts")) {
+
+    saveData();
+
+}
+
 renderProducts();
 
 renderCart();
 
 updatePayment();
+
